@@ -1,0 +1,62 @@
+Source: rauc
+Section: admin
+Priority: optional
+Maintainer: Arnaud Rebillout <arnaud.rebillout@collabora.com>
+Build-Depends:
+ casync <!nocheck>,
+ dbus <!nocheck>,
+ dbus-x11 <!nocheck>,
+ debhelper-compat (= 11),
+ faketime <!nocheck>,
+ grub-common <!nocheck>,
+ libcurl4-gnutls-dev | libcurl-dev,
+ libglib2.0-dev (>= 2.40),
+ libjson-glib-dev,
+ libssl-dev | libssl1.0-dev,
+ libtool,
+ squashfs-tools <!nocheck>,
+ systemd,
+Standards-Version: 4.2.1.5
+Homepage: https://github.com/rauc/rauc
+Vcs-Browser: https://salsa.debian.org/debian/rauc
+Vcs-Git: https://salsa.debian.org/debian/rauc.git
+
+Package: rauc-bin
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ dbus,
+ systemd,
+Suggests:
+ casync,
+ cryptsetup-bin,
+ dosfstools,
+ e2fsprogs,
+ efibootmgr,
+ grub-common,
+ mtd-utils,
+ squashfs-tools,
+ u-boot-tools,
+Description: RAUC - Robust Auto-Update Controller - binary
+ Safe and secure software updates for embedded Linux
+ .
+ RAUC controls the update process on embedded Linux systems. It is both a target
+ application that runs as an update client and a host/target tool that allows
+ you to create, inspect and modify installation artifacts.
+ .
+ This package provides the rauc binary.
+
+Package: rauc-integration
+Architecture: any
+Depends:
+ ${misc:Depends},
+ rauc-bin,
+Description: RAUC - Robust Auto-Update Controller - integration
+ Safe and secure software updates for embedded Linux
+ .
+ RAUC controls the update process on embedded Linux systems. It is both a target
+ application that runs as an update client and a host/target tool that allows
+ you to create, inspect and modify installation artifacts.
+ .
+ This package provides the integation files.

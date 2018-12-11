@@ -1,0 +1,7 @@
+Additionally to the tests provided by `make check`, upstream provides a script
+`uml-test` for additional tests, related to GRUB integration. This script
+setups a virtual environment, and requires `slirp` and `user-mode-linux`.
+
+As part of the package build, we only run `make check`.
+
+ -- Arnaud Rebillout <arnaud.rebillout@collabora.com>  Tue, 11 Dec 2018 14:45:28 +0000

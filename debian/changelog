@@ -1,0 +1,5 @@
+rauc (1.0~rc1-1) unstable; urgency=medium
+
+  * Initial release (Closes: #916210)
+
+ -- Arnaud Rebillout <arnaud.rebillout@collabora.com>  Tue, 11 Dec 2018 14:30:41 +0000
