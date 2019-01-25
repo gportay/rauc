@@ -47,13 +47,24 @@ static gchar *resolve_loop_device(const gchar *devicepath)
 {
 	g_autofree gchar *devicename = NULL;
 	g_autofree gchar *syspath = NULL;
+	gchar *content = NULL;
+	GError *ierror = NULL;
 
 	if (!g_str_has_prefix(devicepath, "/dev/loop"))
 		return g_strdup(devicepath);
 
 	devicename = g_path_get_basename(devicepath);
 	syspath = g_build_filename("/sys/block", devicename, "loop/backing_file", NULL);
-	return g_strchomp(read_file_str(syspath, NULL));
+
+	content = read_file_str(syspath, &ierror);
+	if (!content) {
+		g_message("%s", ierror->message);
+		g_clear_error(&ierror);
+		return NULL;
+	}
+
+	/* g_strchomp modifies the string and returns it */
+	return g_strchomp(content);
 }
 
 gboolean determine_slot_states(GError **error)
@@ -520,7 +531,7 @@ static gboolean verify_compatible(RaucManifest *manifest)
 	if (r_context()->ignore_compatible) {
 		return TRUE;
 	} else if (g_strcmp0(r_context()->config->system_compatible,
-				   manifest->update_compatible) == 0) {
+			manifest->update_compatible) == 0) {
 		return TRUE;
 	} else {
 		g_warning("incompatible manifest for this system (%s): %s",
@@ -649,6 +660,8 @@ static gboolean launch_and_wait_handler(gchar *update_source, gchar *handler_nam
 			continue;
 
 		parse_handler_output(outline);
+
+		g_free(outline);
 	} while (outline);
 
 	res = g_subprocess_wait_check(handleproc, NULL, &ierror);
@@ -1230,6 +1243,7 @@ out:
 }
 #endif
 
+#if ENABLE_NETWORK
 static void print_slot_hash_table(GHashTable *hash_table)
 {
 	GHashTableIter iter;
@@ -1241,6 +1255,7 @@ static void print_slot_hash_table(GHashTable *hash_table)
 		g_print("  %s -> %s\n", key, slot->name);
 	}
 }
+#endif
 
 gboolean do_install_bundle(RaucInstallArgs *args, GError **error)
 {

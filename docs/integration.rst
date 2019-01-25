@@ -364,7 +364,9 @@ kernel.
 This assures having a consistent view on the variables in Barebox and Linux.
 
 An example devicetree node for our simple redundant setup will have the
-following basic structure::
+following basic structure
+
+.. code-block:: DTS
 
   state {
     bootstate {
@@ -379,7 +381,9 @@ following basic structure::
 
 In the state node, we set the appropriate compatible to tell the *barebox,state*
 driver to care for it and define where and how we want to store our data.
-This will look similar to this::
+This will look similar to this:
+
+.. code-block:: DTS
 
   state: state {
           magic = <0x4d433230>;
@@ -407,7 +411,7 @@ For each virtual boot target handled by state,
 two uint32 variables ``remaining_attempts`` and ``priority`` need to be
 defined.:
 
-.. code-block:: c
+.. code-block:: DTS
 
   bootstate {
 
@@ -435,7 +439,9 @@ defined.:
   state driver will load in case of uninitialized backend storage.
 
 Additionally one single variable for storing information about the last chosen
-boot target is required::
+boot target is required:
+
+.. code-block:: DTS
 
   bootstate {
 
@@ -918,7 +924,7 @@ Based on this information, a call of::
 
 will build all required images and generate a signed RAUC bundle from this.
 The created bundle can be found in
-``${DELPOY_DIR_IMAGE}``
+``${DEPLOY_DIR_IMAGE}``
 (defaults to ``tmp/deploy/images/<machine>`` in your build directory).
 
 .. _sec_int_ptxdist:

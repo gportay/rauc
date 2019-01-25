@@ -79,23 +79,23 @@ prepare_softhsm2 ()
   openssl engine pkcs11 -tt -vvvv
 
   openssl x509 -in ${CA_DEV}/autobuilder-1.cert.pem -inform pem -outform der | \
-    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y cert -w /dev/stdin \
+    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y cert -w /proc/self/fd/0 \
     --label autobuilder-1 --id 01
   openssl rsa -in ${CA_DEV}/private/autobuilder-1.pem -inform pem -pubout -outform der | \
-    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y pubkey -w /dev/stdin \
+    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y pubkey -w /proc/self/fd/0 \
     --label autobuilder-1 --id 01
   openssl rsa -in ${CA_DEV}/private/autobuilder-1.pem -inform pem -outform der | \
-    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y privkey -w /dev/stdin \
+    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y privkey -w /proc/self/fd/0 \
     --label autobuilder-1 --id 01
 
   openssl x509 -in ${CA_DEV}/autobuilder-2.cert.pem -inform pem -outform der | \
-    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y cert -w /dev/stdin \
+    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y cert -w /proc/self/fd/0 \
     --label autobuilder-2 --id 02
   openssl rsa -in ${CA_DEV}/private/autobuilder-2.pem -inform pem -pubout -outform der | \
-    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y pubkey -w /dev/stdin \
+    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y pubkey -w /proc/self/fd/0 \
     --label autobuilder-2 --id 02
   openssl rsa -in ${CA_DEV}/private/autobuilder-2.pem -inform pem -outform der | \
-    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y privkey -w /dev/stdin \
+    pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 -y privkey -w /proc/self/fd/0 \
     --label autobuilder-2 --id 02
 
   pkcs11-tool --module ${SOFTHSM2_MOD} -l --pin 1111 --list-objects
@@ -140,14 +140,25 @@ test_expect_success "rauc invalid cmd" "
 "
 
 test_expect_success "rauc missing arg" "
-  test_must_fail rauc install &&
-  test_must_fail rauc write-slot &&
-  test_must_fail rauc info &&
-  test_must_fail rauc bundle &&
-  test_must_fail rauc checksum &&
-  test_must_fail rauc resign &&
-  test_must_fail rauc install &&
-  test_must_fail rauc info
+  test_expect_code 1 rauc install &&
+  test_expect_code 1 rauc write-slot &&
+  test_expect_code 1 rauc write-slot slot &&
+  test_expect_code 1 rauc info &&
+  test_expect_code 1 rauc bundle &&
+  test_expect_code 1 rauc bundle input &&
+  test_expect_code 1 rauc checksum &&
+  test_expect_code 1 rauc resign input &&
+  test_expect_code 1 rauc info
+"
+
+test_expect_success "rauc excess args" "
+  test_expect_code 1 rauc install bundle excess &&
+  test_expect_code 1 rauc write-slot source target excess &&
+  test_expect_code 1 rauc info bundle excess &&
+  test_expect_code 1 rauc bundle indir outbundle excess &&
+  test_expect_code 1 rauc checksum indir excess &&
+  test_expect_code 1 rauc resign inbundle outbundle excess &&
+  test_expect_code 1 rauc info bundle excess
 "
 
 test_expect_success "rauc version" "
@@ -155,11 +166,14 @@ test_expect_success "rauc version" "
 "
 
 test_expect_success "rauc help" "
-  rauc --help
-"
-
-test_expect_success "rauc checksum without argument" "
-  test_expect_code 1 rauc checksum
+  rauc --help &&
+  rauc install --help &&
+  rauc write-slot --help &&
+  rauc info --help &&
+  rauc bundle --help &&
+  rauc checksum --help &&
+  rauc resign --help &&
+  rauc info --help
 "
 
 test_expect_success "rauc checksum with signing" "
@@ -252,6 +266,14 @@ test_expect_success PKCS11 "rauc bundle with PKCS11 (key mismatch)" "
     --cert 'pkcs11:token=rauc;object=autobuilder-1' \
     --key 'pkcs11:token=rauc;object=autobuilder-2' \
     bundle $SHARNESS_TEST_DIRECTORY/install-content out.raucb
+"
+
+test_expect_success SERVICE "rauc service double-init failure" "
+  start_rauc_dbus_service \
+    --conf=${SHARNESS_TEST_DIRECTORY}/test.conf \
+    --override-boot-slot=system0 &&
+  test_when_finished stop_rauc_dbus_service &&
+  test_must_fail rauc service
 "
 
 test_expect_success !SERVICE "rauc --override-boot-slot=system0 status: internally" "

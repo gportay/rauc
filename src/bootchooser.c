@@ -34,13 +34,13 @@ static GString *bootchooser_order_primay(RaucSlot *slot)
 
 	order = g_string_new(slot->bootname);
 
-	/* Iterate over class members */
+	/* Iterate over boot selection-handled slots (bootname set) */
 	slots = g_hash_table_get_values(r_context()->config->slots);
 	for (GList *l = slots; l != NULL; l = l->next) {
 		RaucSlot *s = l->data;
 		if (s == slot)
 			continue;
-		if (s->sclass != slot->sclass)
+		if (!s->bootname)
 			continue;
 
 		g_string_append_c(order, ' ');
@@ -210,11 +210,11 @@ static gboolean barebox_set_state(RaucSlot *slot, gboolean good, GError **error)
 		/* for marking bad, also set priority to 0 */
 		attempts = 0;
 		g_ptr_array_add(pairs, g_strdup_printf(BOOTSTATE_PREFIX ".%s.priority=%i",
-						slot->bootname, 0));
+				slot->bootname, 0));
 	}
 
 	g_ptr_array_add(pairs, g_strdup_printf(BOOTSTATE_PREFIX ".%s.remaining_attempts=%i",
-					slot->bootname, attempts));
+			slot->bootname, attempts));
 
 	if (!barebox_state_set(pairs, &ierror)) {
 		g_propagate_error(error, ierror);
@@ -304,9 +304,8 @@ static gboolean barebox_set_primary(RaucSlot *slot, GError **error)
 		int prio;
 		BareboxSlotState bb_state;
 
-		if (s->sclass != slot->sclass)
+		if (!s->bootname)
 			continue;
-
 
 		if (!barebox_state_get(s->bootname, &bb_state, &ierror)) {
 			g_propagate_error(error, ierror);
@@ -322,11 +321,11 @@ static gboolean barebox_set_primary(RaucSlot *slot, GError **error)
 				prio = BAREBOX_STATE_DEFAULT_PRIORITY;
 		}
 		g_ptr_array_add(pairs, g_strdup_printf(BOOTSTATE_PREFIX ".%s.priority=%i",
-						s->bootname, prio));
+				s->bootname, prio));
 	}
 
 	g_ptr_array_add(pairs, g_strdup_printf(BOOTSTATE_PREFIX ".%s.remaining_attempts=%i",
-					slot->bootname, BAREBOX_STATE_ATTEMPTS_PRIMARY));
+			slot->bootname, BAREBOX_STATE_ATTEMPTS_PRIMARY));
 
 	if (!barebox_state_set(pairs, &ierror)) {
 		g_propagate_error(error, ierror);
@@ -665,6 +664,14 @@ static RaucSlot* uboot_get_primary(GError **error)
 
 		if (primary)
 			break;
+	}
+
+	if (!primary) {
+		g_set_error_literal(
+				error,
+				R_BOOTCHOOSER_ERROR,
+				R_BOOTCHOOSER_ERROR_PARSE_FAILED,
+				"Unable to find primary boot slot");
 	}
 
 	return primary;

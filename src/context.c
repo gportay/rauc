@@ -137,14 +137,17 @@ static gboolean launch_and_wait_variables_handler(gchar *handler_name, GHashTabl
 			continue;
 
 		if (g_str_has_prefix(outline, "RAUC_")) {
-			gchar **split = g_strsplit(outline, "=", 2);
+			g_auto(GStrv) split = g_strsplit(outline, "=", 2);
 
-			if (g_strv_length(split) != 2)
+			if (g_strv_length(split) != 2) {
+				g_free(outline);
 				continue;
+			}
 
 			g_hash_table_insert(variables, g_strdup(split[0]), g_strdup(split[1]));
-			g_strfreev(split);
 		}
+
+		g_free(outline);
 	} while (outline);
 
 	if (!g_subprocess_wait_check(handleproc, NULL, &ierror)) {
@@ -212,19 +215,17 @@ static void r_context_configure(void)
 		if (!compatible) {
 			g_warning("Failed to read dtb compatible: %s", error->message);
 			g_clear_error(&error);
-		} else {
-			g_free(context->config->system_variant);
-			context->config->system_variant = compatible;
 		}
+		g_free(context->config->system_variant);
+		context->config->system_variant = compatible;
 	} else if (context->config->system_variant_type == R_CONFIG_SYS_VARIANT_FILE) {
 		gchar *variant = get_variant_from_file(context->config->system_variant, &error);
 		if (!variant) {
 			g_warning("Failed to read system variant from file: %s", error->message);
 			g_clear_error(&error);
-		} else {
-			g_free(context->config->system_variant);
-			context->config->system_variant = variant;
 		}
+		g_free(context->config->system_variant);
+		context->config->system_variant = variant;
 	}
 
 	if (context->config->systeminfo_handler &&
@@ -241,7 +242,7 @@ static void r_context_configure(void)
 		g_message("Getting Systeminfo: %s", context->config->systeminfo_handler);
 		res = launch_and_wait_variables_handler(context->config->systeminfo_handler, vars, &ierror);
 		if (!res) {
-			g_error("Failed to read system-info variables%s", ierror->message);
+			g_error("Failed to read system-info variables: %s", ierror->message);
 			g_clear_error(&ierror);
 		}
 
@@ -510,8 +511,18 @@ void r_context_register_progress_callback(progress_callback progress_cb)
 RaucContext *r_context_conf(void)
 {
 	if (context == NULL) {
-		network_init();
-		signature_init();
+		GError *ierror = NULL;
+
+		if (!network_init(&ierror)) {
+			g_warning("%s", ierror->message);
+			g_error_free(ierror);
+			return NULL;
+		}
+		if (!signature_init(&ierror)) {
+			g_warning("%s", ierror->message);
+			g_error_free(ierror);
+			return NULL;
+		}
 
 		context = g_new0(RaucContext, 1);
 		context->configpath = g_strdup("/etc/rauc/system.conf");

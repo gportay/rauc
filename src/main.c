@@ -160,6 +160,7 @@ static gboolean install_start(int argc, char **argv)
 
 	if (argc > 3) {
 		g_printerr("Excess argument: %s\n", argv[3]);
+		r_exit_status = 1;
 		goto out;
 	}
 
@@ -187,18 +188,18 @@ static gboolean install_start(int argc, char **argv)
 			goto out_loop;
 		}
 		if (g_signal_connect(installer, "g-properties-changed",
-				    G_CALLBACK(on_installer_changed), args) <= 0) {
+				G_CALLBACK(on_installer_changed), args) <= 0) {
 			g_printerr("Failed to connect properties-changed signal\n");
 			goto out_loop;
 		}
 		if (g_signal_connect(installer, "completed",
-				    G_CALLBACK(on_installer_completed), args) <= 0) {
+				G_CALLBACK(on_installer_completed), args) <= 0) {
 			g_printerr("Failed to connect completed signal\n");
 			goto out_loop;
 		}
 		g_debug("Trying to contact rauc service");
 		if (!r_installer_call_install_sync(installer, args->name, NULL,
-				    &error)) {
+				&error)) {
 			g_printerr("Failed %s\n", error->message);
 			g_error_free(error);
 			goto out_loop;
@@ -242,13 +243,6 @@ static gboolean bundle_start(int argc, char **argv)
 	GError *ierror = NULL;
 	g_debug("bundle start");
 
-	if (r_context()->certpath == NULL ||
-	    r_context()->keypath == NULL) {
-		g_printerr("Cert and key files must be provided\n");
-		r_exit_status = 1;
-		goto out;
-	}
-
 	if (argc < 3) {
 		g_printerr("An input directory name must be provided\n");
 		r_exit_status = 1;
@@ -263,6 +257,14 @@ static gboolean bundle_start(int argc, char **argv)
 
 	if (argc > 4) {
 		g_printerr("Excess argument: %s\n", argv[4]);
+		r_exit_status = 1;
+		goto out;
+	}
+
+	if (r_context()->certpath == NULL ||
+	    r_context()->keypath == NULL) {
+		g_printerr("Cert and key files must be provided\n");
+		r_exit_status = 1;
 		goto out;
 	}
 
@@ -313,6 +315,7 @@ static gboolean write_slot_start(int argc, char **argv)
 
 	if (argc > 4) {
 		g_printerr("Excess argument: %s\n", argv[4]);
+		r_exit_status = 1;
 		goto out;
 	}
 
@@ -380,14 +383,6 @@ static gboolean resign_start(int argc, char **argv)
 	GError *ierror = NULL;
 	g_debug("resign start");
 
-	if (r_context()->certpath == NULL ||
-	    r_context()->keypath == NULL ||
-	    r_context()->keyringpath == NULL) {
-		g_printerr("Cert, key and keyring files must be provided\n");
-		r_exit_status = 1;
-		goto out;
-	}
-
 	if (argc < 3) {
 		g_printerr("An input bundle must be provided\n");
 		r_exit_status = 1;
@@ -402,6 +397,15 @@ static gboolean resign_start(int argc, char **argv)
 
 	if (argc > 4) {
 		g_printerr("Excess argument: %s\n", argv[4]);
+		r_exit_status = 1;
+		goto out;
+	}
+
+	if (r_context()->certpath == NULL ||
+	    r_context()->keypath == NULL ||
+	    r_context()->keyringpath == NULL) {
+		g_printerr("Cert, key and keyring files must be provided\n");
+		r_exit_status = 1;
 		goto out;
 	}
 
@@ -443,6 +447,7 @@ static gboolean extract_start(int argc, char **argv)
 
 	if (argc > 4) {
 		g_printerr("Excess argument: %s\n", argv[4]);
+		r_exit_status = 1;
 		goto out;
 	}
 
@@ -494,6 +499,7 @@ static gboolean convert_start(int argc, char **argv)
 
 	if (argc > 4) {
 		g_printerr("Excess argument: %s\n", argv[4]);
+		r_exit_status = 1;
 		goto out;
 	}
 
@@ -537,8 +543,14 @@ static gboolean checksum_start(int argc, char **argv)
 		goto out;
 	}
 
-	if (argc != 3) {
+	if (argc < 3) {
 		g_printerr("A directory name must be provided\n");
+		r_exit_status = 1;
+		goto out;
+	}
+
+	if (argc > 3) {
+		g_printerr("Excess argument: %s\n", argv[3]);
 		r_exit_status = 1;
 		goto out;
 	}
@@ -821,6 +833,7 @@ static gboolean info_start(int argc, char **argv)
 
 	if (argc > 3) {
 		g_printerr("Excess argument: %s\n", argv[3]);
+		r_exit_status = 1;
 		goto out;
 	}
 
@@ -902,6 +915,7 @@ out:
 }
 
 typedef struct {
+	/* Reference to primary slot (must not be freed) */
 	RaucSlot *primary;
 	gchar *compatible;
 	gchar *variant;
@@ -913,7 +927,6 @@ static void free_status_print(RaucStatusPrint *status)
 {
 	g_return_if_fail(status);
 
-	r_free_slot(status->primary);
 	g_free(status->compatible);
 	g_free(status->variant);
 	g_free(status->bootslot);
@@ -1311,7 +1324,7 @@ static gboolean retrieve_slot_states_via_dbus(GHashTable **slots, GError **error
 		}
 		g_variant_dict_lookup(&dict, "mountpoint", "s", &slot->mount_point);
 		g_variant_dict_lookup(&dict, "boot-status", "s", &boot_good);
-		if (g_strcmp0(boot_good, "good")) {
+		if (g_strcmp0(boot_good, "good") == 0) {
 			slot->boot_good = TRUE;
 		} else {
 			slot->boot_good = FALSE;
@@ -1387,10 +1400,17 @@ static gboolean retrieve_status_via_dbus(RaucStatusPrint **status_print, GError 
 	istatus->variant = r_installer_dup_variant(proxy);
 	istatus->compatible = r_installer_dup_compatible(proxy);
 	istatus->bootslot = r_installer_dup_boot_slot(proxy);
-	istatus->slots = NULL;
-	/* Add an empty dummy slot only containing name of primary */
-	istatus->primary = g_new0(RaucSlot, 1);
-	istatus->primary->name = primary;
+
+	/* Obtain configured slots and their state */
+	if (!retrieve_slot_states_via_dbus(&istatus->slots, &ierror)) {
+		g_propagate_prefixed_error(error, ierror, "rauc status: error retrieving slot status via D-Bus: ");
+		g_error_free(ierror);
+		return FALSE;
+	}
+
+	/* Finally, we get the right primary slot reference from the list */
+	if (primary)
+		istatus->primary = g_hash_table_lookup(istatus->slots, primary);
 
 	*status_print = g_steal_pointer(&istatus);
 
@@ -1481,14 +1501,6 @@ static gboolean status_start(int argc, char **argv)
 			r_exit_status = 1;
 			goto out;
 		}
-
-		if (!retrieve_slot_states_via_dbus(&status_print->slots, &ierror)) {
-			message = g_strdup_printf("rauc status: error retrieving slot status via D-Bus: %s",
-					ierror->message);
-			g_error_free(ierror);
-			r_exit_status = 1;
-			goto out;
-		}
 	}
 
 	if (!print_status(status_print)) {
@@ -1533,7 +1545,7 @@ static gboolean status_start(int argc, char **argv)
 		}
 		g_debug("Trying to contact rauc service");
 		if (!r_installer_call_mark_sync(proxy, state, slot_identifier,
-				    &slot_name, &message, NULL, &ierror)) {
+				&slot_name, &message, NULL, &ierror)) {
 			message = g_strdup(ierror->message);
 			g_error_free(ierror);
 			r_exit_status = 1;
@@ -1556,7 +1568,9 @@ static gboolean service_start(int argc, char **argv)
 {
 	g_debug("service start");
 
-	return r_service_run();
+	r_exit_status = r_service_run() ? 0 : 1;
+
+	return TRUE;
 }
 #endif
 
@@ -1786,14 +1800,14 @@ static void cmdline_handler(int argc, char **argv)
 		if (confpath != NULL ||
 		    certpath != NULL ||
 		    keypath != NULL) {
-			g_error("rauc busy, cannot reconfigure");
+			g_printerr("rauc busy, cannot reconfigure\n");
 			r_exit_status = 1;
 			return;
 		}
 	}
 
 	if (r_context_get_busy() && !rcommand->while_busy) {
-		g_error("rauc busy: cannot run %s", rcommand->name);
+		g_printerr("rauc busy: cannot run %s\n", rcommand->name);
 		r_exit_status = 1;
 		return;
 	}
