@@ -18,5 +18,5 @@ Forwarded: not-needed, Debian-specific
 +#check_PROGRAMS += test/network.test
 +#endif
  
- check_LTLIBRARIES = librauctest.la
+ noinst_PROGRAMS = test/fakerand
  
