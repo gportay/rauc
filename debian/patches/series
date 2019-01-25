@@ -1,2 +1,1 @@
 disable-some-tests.patch
-test-manifest.c-fix-freeing-of-GBytes.patch
