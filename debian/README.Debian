@@ -1,6 +1,7 @@
 Additionally to the tests provided by `make check`, upstream provides a script
 `uml-test` for additional tests, related to GRUB integration. This script
-setups a virtual environment, and requires `slirp` and `user-mode-linux`.
+setups a virtual environment, and requires the following dependencies:
+grub-common, slirp, squashfs-tools and user-mode-linux.
 
 As part of the package build, we only run `make check`.
 
