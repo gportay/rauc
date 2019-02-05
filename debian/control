@@ -6,7 +6,7 @@ Build-Depends:
  casync <!nocheck>,
  dbus <!nocheck>,
  dbus-x11 <!nocheck>,
- debhelper-compat (= 11),
+ debhelper-compat (= 12),
  faketime <!nocheck>,
  grub-common <!nocheck>,
  libcurl4-gnutls-dev | libcurl-dev,
