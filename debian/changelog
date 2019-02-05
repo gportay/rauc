@@ -1,12 +1,5 @@
 rauc (1.0-1) UNRELEASED; urgency=medium
 
-  * New upstream release
-  * Drop patches applied upstream, refresh remaining patches
-
- -- Arnaud Rebillout <arnaud.rebillout@collabora.com>  Fri, 25 Jan 2019 13:37:28 +0700
-
-rauc (1.0~rc1-1) UNRELEASED; urgency=medium
-
   * Initial release (Closes: #916210)
 
- -- Arnaud Rebillout <arnaud.rebillout@collabora.com>  Tue, 11 Dec 2018 14:30:41 +0000
+ -- Arnaud Rebillout <arnaud.rebillout@collabora.com>  Tue, 05 Feb 2019 15:01:55 +0700
