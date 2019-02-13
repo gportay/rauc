@@ -16,7 +16,7 @@ Build-Depends:
  libssl-dev | libssl1.0-dev,
  libtool,
  squashfs-tools <!nocheck>,
- systemd,
+ systemd [linux-any],
 Standards-Version: 4.3.0.1
 Homepage: https://github.com/rauc/rauc
 Vcs-Browser: https://salsa.debian.org/debian/rauc
@@ -28,7 +28,7 @@ Depends:
  ${misc:Depends},
  ${shlibs:Depends},
  dbus,
- systemd,
+ systemd [linux-any],
 Suggests:
  casync,
  cryptsetup-bin,
