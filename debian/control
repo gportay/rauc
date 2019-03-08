@@ -22,7 +22,7 @@ Homepage: https://github.com/rauc/rauc
 Vcs-Browser: https://salsa.debian.org/debian/rauc
 Vcs-Git: https://salsa.debian.org/debian/rauc.git
 
-Package: rauc-bin
+Package: rauc
 Architecture: any
 Depends:
  ${misc:Depends},
@@ -48,16 +48,16 @@ Description: RAUC - Robust Auto-Update Controller - binary
  .
  This package provides the rauc binary.
 
-Package: rauc-integration
+Package: rauc-service
 Architecture: any
 Depends:
  ${misc:Depends},
- rauc-bin,
-Description: RAUC - Robust Auto-Update Controller - integration
+ rauc,
+Description: RAUC - Robust Auto-Update Controller - service
  Safe and secure software updates for embedded Linux
  .
  RAUC controls the update process on embedded Linux systems. It is both a target
  application that runs as an update client and a host/target tool that allows
  you to create, inspect and modify installation artifacts.
  .
- This package provides the integation files.
+ This package provides the rauc service files.
