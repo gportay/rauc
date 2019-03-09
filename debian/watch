@@ -1,7 +1,6 @@
 version=4
 opts=\
-uversionmangle=s/-rc/~rc/,\
-filenamemangle=s/.+\/v(\d\S+)\.tar\.gz/rauc-$1\.tar\.gz/ \
-  https://github.com/rauc/rauc/tags \
-  .*/v(\d\S+)\.tar\.gz
+pgpsigurlmangle=s/\.tar\.xz$/$0.asc/,\
+uversionmangle=s/-rc/~rc/ \
+  https://github.com/rauc/rauc/releases/latest .*/rauc-(\d\S+)\.tar\.xz
 
