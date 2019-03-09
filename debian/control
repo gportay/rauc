@@ -49,7 +49,7 @@ Description: RAUC - Robust Auto-Update Controller - binary
  This package provides the rauc binary.
 
 Package: rauc-service
-Architecture: any
+Architecture: all
 Depends:
  ${misc:Depends},
  rauc,
