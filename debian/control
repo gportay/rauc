@@ -39,7 +39,7 @@ Suggests:
  mtd-utils,
  squashfs-tools,
  u-boot-tools,
-Description: RAUC - Robust Auto-Update Controller - binary
+Description: Robust Auto-Update Controller - binary
  Safe and secure software updates for embedded Linux
  .
  RAUC controls the update process on embedded Linux systems. It is both a target
@@ -53,7 +53,7 @@ Architecture: all
 Depends:
  ${misc:Depends},
  rauc,
-Description: RAUC - Robust Auto-Update Controller - service
+Description: Robust Auto-Update Controller - service
  Safe and secure software updates for embedded Linux
  .
  RAUC controls the update process on embedded Linux systems. It is both a target
