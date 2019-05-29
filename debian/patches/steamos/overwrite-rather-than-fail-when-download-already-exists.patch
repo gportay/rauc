@@ -1,0 +1,30 @@
+From: Arnaud Rebillout <arnaud.rebillout@collabora.com>
+Date: Fri, 13 Jul 2018 11:08:57 +0700
+Subject: Overwrite rather than fail when download already exists
+
+It happened a few times during tests. It just doesn't feel very
+robust to fail so easily.
+
+Signed-off-by: Arnaud Rebillout <arnaud.rebillout@collabora.com>
+Origin: vendor, SteamOS
+Forwarded: not-needed, SteamOS-specific
+---
+ src/network.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/network.c b/src/network.c
+index 2ad7508..04df0ae 100644
+--- a/src/network.c
++++ b/src/network.c
+@@ -132,7 +132,7 @@ gboolean download_file(const gchar *target, const gchar *url, gsize limit, GErro
+ 
+ 	/* TODO: resume incomplete downloads */
+ 
+-	xfer.dl = fopen(target, "wbx");
++	xfer.dl = fopen(target, "wb");
+ 	if (xfer.dl == NULL) {
+ 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Failed opening target file");
+ 		goto out;
+-- 
+2.18.0
+

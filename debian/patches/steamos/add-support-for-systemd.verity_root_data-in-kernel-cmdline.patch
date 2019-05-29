@@ -1,0 +1,29 @@
+From: Arnaud Rebillout <arnaud.rebillout@collabora.com>
+Date: Tue, 14 May 2019 13:35:35 +0700
+Subject: Add support for systemd.verity_root_data= in the kernel cmdline
+
+Origin: vendor, SteamOS
+Forwarded: not needed, SteamOS-specific
+Signed-off-by: Arnaud Rebillout <arnaud.rebillout@collabora.com>
+---
+ src/context.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/context.c b/src/context.c
+index 1355a67..b66a788 100644
+--- a/src/context.c
++++ b/src/context.c
+@@ -51,6 +51,10 @@ static const gchar* get_cmdline_bootname(void)
+ 	}
+ 
+ 	bootname = regex_match("root=(\\S+)", contents);
++
++	if (!bootname)
++		bootname = regex_match("systemd\\.verity_root_data=(\\S+)", contents);
++
+ 	if (!bootname)
+ 		return NULL;
+ 
+-- 
+2.20.1
+

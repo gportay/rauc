@@ -1,1 +1,3 @@
 disable-network-tests.patch
+steamos/overwrite-rather-than-fail-when-download-already-exists.patch
+steamos/add-support-for-systemd.verity_root_data-in-kernel-cmdline.patch
