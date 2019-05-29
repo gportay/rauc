@@ -1,5 +1,6 @@
-rauc (1.0-1) UNRELEASED; urgency=medium
+rauc (1.0-0+steamosc1) clockwerk; urgency=medium
 
   * Initial release (Closes: #916210)
+  * Merge https://salsa.debian.org/debian/rauc/merge_requests/2
 
  -- Arnaud Rebillout <arnaud.rebillout@collabora.com>  Tue, 05 Feb 2019 15:01:55 +0700
