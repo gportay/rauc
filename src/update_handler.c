@@ -164,8 +164,9 @@ static gboolean copy_raw_image(RaucImage *image, GUnixOutputStream *outstream, G
 	return TRUE;
 }
 
-static gboolean casync_extract(RaucImage *image, gchar *dest, const gchar *seed, const gchar *store, GError **error)
+static gboolean casync_extract(RaucImage *image, gchar *dest, const gchar *seed, const gchar *store, const gchar *tmpdir, GError **error)
 {
+	g_autoptr(GSubprocessLauncher) launcher = NULL;
 	g_autoptr(GSubprocess) sproc = NULL;
 	GError *ierror = NULL;
 	gboolean res = FALSE;
@@ -187,8 +188,12 @@ static gboolean casync_extract(RaucImage *image, gchar *dest, const gchar *seed,
 	g_ptr_array_add(args, NULL);
 
 	r_debug_subprocess(args);
-	sproc = g_subprocess_newv((const gchar * const *)args->pdata,
-			G_SUBPROCESS_FLAGS_NONE, &ierror);
+	launcher = g_subprocess_launcher_new(G_SUBPROCESS_FLAGS_NONE);
+	if (tmpdir)
+		g_subprocess_launcher_setenv(launcher, "TMPDIR", tmpdir, TRUE);
+
+	sproc = g_subprocess_launcher_spawnv(launcher,
+			(const gchar * const *)args->pdata, &ierror);
 	if (sproc == NULL) {
 		g_propagate_prefixed_error(
 				error,
@@ -237,6 +242,7 @@ static gboolean casync_extract_image(RaucImage *image, gchar *dest, GError **err
 	RaucSlot *seedslot = NULL;
 	g_autofree gchar *seed = NULL;
 	gchar *store = NULL;
+	gchar *tmpdir = NULL;
 	gboolean seed_mounted = FALSE;
 
 	/* Prepare Seed */
@@ -274,8 +280,12 @@ extract:
 	store = r_context()->install_info->mounted_bundle->storepath;
 	g_debug("Using store path: '%s'", store);
 
+	/* Set temporary directory */
+	tmpdir = r_context()->config->tmp_directory;
+	g_debug("Using tmp path: '%s'", tmpdir);
+
 	/* Call casync to extract */
-	res = casync_extract(image, dest, seed, store, &ierror);
+	res = casync_extract(image, dest, seed, store, tmpdir, &ierror);
 	if (!res) {
 		g_propagate_error(error, ierror);
 		goto out;

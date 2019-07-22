@@ -279,6 +279,7 @@ gboolean load_config(const gchar *filename, RaucConfig **config, GError **error)
 
 	/* parse [casync] section */
 	c->store_path = key_file_consume_string(key_file, "casync", "storepath", NULL);
+	c->tmp_directory = key_file_consume_string(key_file, "casync", "tmpdir", NULL);
 	if (!check_remaining_keys(key_file, "casync", &ierror)) {
 		g_propagate_error(error, ierror);
 		res = FALSE;
@@ -496,6 +497,7 @@ void free_config(RaucConfig *config)
 	g_free(config->system_bootloader);
 	g_free(config->mount_prefix);
 	g_free(config->store_path);
+	g_free(config->tmp_directory);
 	g_free(config->grubenv_path);
 	g_free(config->statusfile_path);
 	g_free(config->keyring_path);
